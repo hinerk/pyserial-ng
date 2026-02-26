@@ -76,9 +76,11 @@ class Serial:
 
         returns(bytes):      read data
         """
-        ts_begin = time.time()
+        t0 = time.time()
         data = b''
-        while timeout is None or (time.time() - ts_begin) < timeout:
+        while True:
+            if timeout is not None and (t0 + timeout) < time.time():
+                raise TimeoutError(f"read_until({until!r}, timeout={timeout!r}) timed out!")
             new_bytes = b''
             for _ in range(self._ser.in_waiting):
                 new_byte = self._ser.read(1)
@@ -90,7 +92,6 @@ class Serial:
                     return data
             if self._callback is not None:
                 self._callback(new_bytes)
-        return data
 
     def write(self, data: bytes) -> int:
         """
